@@ -1,3 +1,8 @@
+# FROM dotnet.2.1
+
+# COPY source dest
+
+# ENTRYPOINT [ "dotnet run consumer-test.dll" ]
 FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-buster-slim AS base
 WORKDIR /app
 EXPOSE 80

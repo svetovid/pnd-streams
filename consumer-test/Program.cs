@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using Confluent.Kafka;
 
@@ -19,8 +20,9 @@ namespace consumer_test
                 // earliest message in the topic 'my-topic' the first time you run the program.
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
-
-            using (var c = new ConsumerBuilder<Ignore, string>(conf).Build())
+             
+            using (var c = new ConsumerBuilder<Ignore, Pnd.Streams.EventLog>(conf)
+                .SetValueDeserializer(new ProtoDeserializer<Pnd.Streams.EventLog>()).Build())
             {
                 c.Subscribe("my-topic");
 
@@ -30,14 +32,24 @@ namespace consumer_test
                     cts.Cancel();
                 };
 
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+
                 try
                 {
                     while (true)
                     {
                         try
                         {
+                            // await Task.Delay(1000);
+
                             var cr = c.Consume(cts.Token);
-                            Console.WriteLine($"Consumed message '{cr.Value}' at: '{cr.TopicPartitionOffset}'. DateTime: {DateTime.Now}");
+                            Console.WriteLine($"Consumed message '{cr.Value.Body}' with subject '{cr.Value.Subject}' at: '{cr.TopicPartitionOffset}'. DateTime: {DateTime.Now}");
+
+                            if (stopwatch.ElapsedMilliseconds > 20000)
+                            {
+                                break;
+                            }
                         }
                         catch (ConsumeException e)
                         {
@@ -45,7 +57,7 @@ namespace consumer_test
                         }
                     }
                 }
-                catch (OperationCanceledException)
+                finally
                 {
                     // Ensure the consumer leaves the group cleanly and final offsets are committed.
                     c.Close();

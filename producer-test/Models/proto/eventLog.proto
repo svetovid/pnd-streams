@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package Pnd.Streams;
+
+message EventLog {
+    string Id = 1;
+    string Subject = 2;
+    string Body = 3;
+    string CorrelationId = 4;
+}
